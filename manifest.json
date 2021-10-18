@@ -1,0 +1,39 @@
+{
+  "name": "BetterSchoolCloud",
+  "description": "BetterSchoolCloud, a browser extension to make your SchoolCloud experience better",
+  "version": "2.6.0",
+  "permissions": ["activeTab", "storage"],
+  "content_scripts": [
+    {
+      "matches": ["*://schoolcloud.ca/Student/*"],
+      "js": ["injector.js"],
+      "run_at": "document_end",
+      "all_frames": true
+    }
+  ],
+  "background": {
+    "scripts": ["background.js"],
+    "persistent": false
+  },
+  "web_accessible_resources": [
+    "src/averageCalculator.js",
+    "src/loadMarkbook.js",
+    "src/liveMarkbookCalculator.js",
+    "src/percentages.js",
+    "src/betterTableLayout.js",
+    "src/selectors.js",
+    "src/fixBgColor.js"
+  ],
+  "browser_action": {
+    "default_title": "BetterSchoolCloud",
+    "default_popup": "src/popup.html"
+  },
+  "icons": {
+    "16": "img/icon16.png",
+    "32": "img/icon32.png",
+    "96": "img/icon96.png",
+    "128": "img/icon128.png",
+    "196": "img/icon196.png"
+  },
+  "manifest_version": 2
+}
