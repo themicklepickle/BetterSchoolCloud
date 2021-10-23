@@ -117,54 +117,79 @@ const calculateMarks = () => {
  */
 const parseMarkbook = () => {
   let markbook = [];
-  $("#markbookTable table tbody > tr:gt(0)").each(function () {
-    // Loop through each row except the first
-    const row = $(this);
-    const margin = row.find("td:first > span:first")[0].style["margin-left"];
+  console.log("parse");
+  $("table.media-print-table > tbody > tr > td")
+    .children()
+    .each(function () {
+      // Loop through each row except the first
+      const row = $(this);
+      const tagName = $(this).prop("tagName");
+      // const margin = row.find("td:first > span:first")[0].style["margin-left"];
+      // const isUnit = nodeName == "H2";
+      // console.log("name", tagName);
 
-    switch (margin) {
-      case "0px": {
+      if (tagName === "H2") {
+        const weight = parseFloat(
+          row.html().search(/(?!\().+(?=% of overall mark)/)
+        );
+        console.log(row.text());
         markbook.push({
-          mark: row.find(selectors.mark).val(),
-          weight: row.find(selectors.weight).val(),
-          denominator: row.find(selectors.denominator).val(),
+          mark: 0,
+          weight,
+          denominator: 0,
           children: [],
           row: row,
         });
-        break;
+      } else if (tagName === "TABLE") {
+      } else {
+        throw new Error("Unknown tagName", tagName);
       }
-      case "20px": {
-        markbook[markbook.length - 1].children.push({
-          // Push a middle row into the latest top level
-          mark: row.find(selectors.mark).val(),
-          weight: row.find(selectors.weight).val(),
-          denominator: row.find(selectors.denominator).val(),
-          children: [],
-          row: row,
-        });
-        break;
-      }
-      case "40px": {
-        let top = markbook[markbook.length - 1].children;
-        let middle = !top[top.length - 1] ? top : top[top.length - 1].children;
 
-        if (!middle) {
-          middle = top;
-        }
+      // switch (margin) {
+      //   case "0px": {
+      //     markbook.push({
+      //       mark: row.find(selectors.mark).val(),
+      //       weight: row.find(selectors.weight).val(),
+      //       denominator: row.find(selectors.denominator).val(),
+      //       children: [],
+      //       row: row,
+      //     });
+      //     break;
+      //   }
+      //   case "20px": {
+      //     markbook[markbook.length - 1].children.push({
+      //       // Push a middle row into the latest top level
+      //       mark: row.find(selectors.mark).val(),
+      //       weight: row.find(selectors.weight).val(),
+      //       denominator: row.find(selectors.denominator).val(),
+      //       children: [],
+      //       row: row,
+      //     });
+      //     break;
+      //   }
+      //   case "40px": {
+      //     let top = markbook[markbook.length - 1].children;
+      //     let middle = !top[top.length - 1]
+      //       ? top
+      //       : top[top.length - 1].children;
 
-        middle.push({
-          mark: row.find(selectors.mark).val(),
-          weight: row.find(selectors.weight).val(),
-          denominator: row.find(selectors.denominator).val(),
-          row: row,
-        });
-        break;
-      }
-      default: {
-        throw new Error("Unknown margin", margin);
-      }
-    }
-  });
+      //     if (!middle) {
+      //       middle = top;
+      //     }
+
+      //     middle.push({
+      //       mark: row.find(selectors.mark).val(),
+      //       weight: row.find(selectors.weight).val(),
+      //       denominator: row.find(selectors.denominator).val(),
+      //       row: row,
+      //     });
+      //     break;
+      //   }
+      //   default: {
+      //     throw new Error("Unknown margin", margin);
+      //   }
+      // }
+    });
   return markbook;
 };
 
@@ -174,7 +199,7 @@ const parseMarkbook = () => {
 const createInitialMarkbook = () => {
   initialMarkbook = [];
 
-  $("#markbookTable table tbody > tr:gt(0)").each(function () {
+  $("table.media-print-table > tbody > tr:gt(0)").each(function () {
     const mark = $(this).find("td:nth-child(2) > input");
     const weight = $(this).find("td:nth-child(4) > input");
     const denominator = $(this).find("td:nth-child(5) > input");
@@ -264,12 +289,18 @@ const makeMarkbookEditable = () => {
         }
     </style>`);
 
-  initialFinalMark = parseFloat(
-    $("#markbookTable > div > div").text().substr(11)
-  ); // Grab everything after 'Term Mark: '
+  // initialFinalMark = parseFloat(
+  //   $("table.media-print-table  > div > div").text().substr(11)
+  // ); // Grab everything after 'Term Mark: '
+  initialFinalMark = $(
+    "table.media-print-table > thead tbody > tr:first td:last"
+  )
+    .text()
+    .trim();
+  console.log(initialFinalMark);
 
   $(
-    "#markbookTable table tbody td:nth-child(n+2):nth-child(-n+5):not(:nth-child(3))"
+    "table.media-print-table > tbody table td:nth-child(n+3):nth-child(-n+5):not(:nth-child(3))"
   ).each(function () {
     let value = $(this).text();
 
@@ -301,35 +332,35 @@ const makeMarkbookEditable = () => {
       });
     }
 
-    const margin = $(this).parent().find("td:first > span:first")[0].style[
-      "margin-left"
-    ]; // determines if the row is for an assignment, section, or unit
+    // const margin = $(this).parent().find("td:first > span:first")[0].style[
+    //   "margin-left"
+    // ]; // determines if the row is for an assignment, section, or unit
     const isTargetColumn =
       $(this).nextAll().length === 3 || $(this).nextAll().length === 0; // the mark column has 3 cells after it and the denominator column has 0
 
-    let hasChildren;
-    if ($(this).parent().nextAll().length !== 0) {
-      // check if the current row is the last row
-      const nextMargin = $(this)
-        .parent()
-        .next()
-        .find("td:first > span:first")[0].style["margin-left"];
-      hasChildren = margin !== nextMargin;
-    } else {
-      hasChildren = false;
-    }
+    // let hasChildren;
+    // if ($(this).parent().nextAll().length !== 0) {
+    //   // check if the current row is the last row
+    //   const nextMargin = $(this)
+    //     .parent()
+    //     .next()
+    //     .find("td:first > span:first")[0].style["margin-left"];
+    //   hasChildren = margin !== nextMargin;
+    // } else {
+    //   hasChildren = false;
+    // }
 
     // only assignments and sections/units without children should have their marks and denominators editable
     // other marks are dependent on the marks of their children so their input fields should be disabled
-    if (margin !== "40px" && isTargetColumn && hasChildren) {
-      $(input).prop("disabled", true); // to maintain compatibility with other functions, the input is disabled rather than completely removed
-      $(input).css("cursor", "text"); // give the appearance of regular text
-    } else {
-      $(input).bind("input", function () {
-        calculateMarks();
-        highlightChanges();
-        if (settings.percentages) calculatePercentages();
-      });
-    }
+    // if (margin !== "40px" && isTargetColumn && hasChildren) {
+    //   $(input).prop("disabled", true); // to maintain compatibility with other functions, the input is disabled rather than completely removed
+    //   $(input).css("cursor", "text"); // give the appearance of regular text
+    // } else {
+    $(input).bind("input", function () {
+      calculateMarks();
+      highlightChanges();
+      if (settings.percentages) calculatePercentages();
+    });
+    // }
   });
 };
