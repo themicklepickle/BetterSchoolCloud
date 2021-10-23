@@ -56,12 +56,9 @@ const injectScriptList = (scriptList) => {
     if (!settings.calculation && !settings.quickview)
       scriptList.calculation.enabled = false;
 
-    if (!settings.liveModification) scriptList.liveModification.enabled = false;
-
-    if (!settings.percentages) scriptList.percentages.enabled = false;
-
-    if (!settings.betterTableLayout)
-      scriptList.betterTableLayout.enabled = false;
+    scriptList.liveModification.enabled = settings.liveModification;
+    scriptList.percentages.enabled = settings.percentages;
+    scriptList.betterTableLayout.enabled = settings.betterTableLayout;
 
     if (!settings.percentages && !settings.liveModification)
       scriptList.selectors.enabled = false;
