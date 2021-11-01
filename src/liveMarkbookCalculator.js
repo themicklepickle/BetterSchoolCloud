@@ -72,8 +72,8 @@ const calculateMarks = () => {
 
         if (bottom && bottom.length) {
           // Make sure there is a bottom layer to handle
-          markbook[i].children[j].mark =
-            calculateLayer(bottom) * markbook[i].children[j].denominator; // Set the new mark
+          markbook[i].children[j].mark = calculateLayer(bottom) * 100; // Set the new mark
+          // calculateLayer(bottom) * markbook[i].children[j].denominator; // Set the new mark
         }
       }
 
@@ -83,32 +83,36 @@ const calculateMarks = () => {
   }
 
   let finalMark = +(calculateLayer(markbook) * 100).toFixed(3);
-  let finalMarkSelector = $("#markbookTable > div > div");
-
-  // if there is no mark change, don't display the final mark
-  if (initialFinalMark == finalMark) {
-    finalMarkSelector.text(`Term Mark: ${initialFinalMark}`);
-    return;
-  }
-
-  // Display the final grade with the initial grade faded
-  finalMarkSelector.text("Term Mark: ");
-  finalMarkSelector.append(
-    `<span style="opacity: 0.7;">${initialFinalMark} →</span> ${finalMark}`
+  let finalMarkSelector = $(
+    "table.media-print-table > thead tbody > tr:first td:last"
   );
 
-  if (!isNaN(initialFinalMark) && initialFinalMark !== finalMark) {
-    let difference = +parseFloat(finalMark - initialFinalMark).toFixed(3);
+  finalMarkSelector.text(finalMark);
 
-    if (difference > 0)
-      finalMarkSelector.append(
-        ` <span style="color: #00c100;">+${difference}</span>`
-      );
-    else
-      finalMarkSelector.append(
-        ` <span style="color: #c10000;">${difference}</span>`
-      );
-  }
+  // // if there is no mark change, don't display the final mark
+  // if (initialFinalMark == finalMark) {
+  //   finalMarkSelector.text(`Term Mark: ${initialFinalMark}`);
+  //   return;
+  // }
+
+  // // Display the final grade with the initial grade faded
+  // finalMarkSelector.text("Term Mark: ");
+  // finalMarkSelector.append(
+  //   `<span style="opacity: 0.7;">${initialFinalMark} →</span> ${finalMark}`
+  // );
+
+  // if (!isNaN(initialFinalMark) && initialFinalMark !== finalMark) {
+  //   let difference = +parseFloat(finalMark - initialFinalMark).toFixed(3);
+
+  //   if (difference > 0)
+  //     finalMarkSelector.append(
+  //       ` <span style="color: #00c100;">+${difference}</span>`
+  //     );
+  //   else
+  //     finalMarkSelector.append(
+  //       ` <span style="color: #c10000;">${difference}</span>`
+  //     );
+  // }
 };
 
 /**
@@ -117,30 +121,72 @@ const calculateMarks = () => {
  */
 const parseMarkbook = () => {
   let markbook = [];
-  console.log("parse");
+  let hasHeaders = false;
+
   $("table.media-print-table > tbody > tr > td")
     .children()
     .each(function () {
       // Loop through each row except the first
-      const row = $(this);
+      const section = $(this);
       const tagName = $(this).prop("tagName");
       // const margin = row.find("td:first > span:first")[0].style["margin-left"];
       // const isUnit = nodeName == "H2";
       // console.log("name", tagName);
 
       if (tagName === "H2") {
-        const weight = parseFloat(
-          row.html().search(/(?!\().+(?=% of overall mark)/)
-        );
-        console.log(row.text());
+        hasHeaders = true;
+        const text = section.text();
+        const re = /\(\d+% of overall mark\)/;
+        const matches = text.match(re);
+        if (matches.length === 0) throw new Error("Wack header", text);
+
+        const weight = parseFloat(matches[0].substring(1).split("%")[0]);
+
         markbook.push({
           mark: 0,
           weight,
-          denominator: 0,
+          denominator: 100,
           children: [],
-          row: row,
+          row: section,
         });
       } else if (tagName === "TABLE") {
+        // middle
+        const row = section.find("tr:first > td > span:nth-child(2)");
+        const text = row.text();
+        const weight = parseFloat(text.substring(1).split("%")[0]);
+
+        // TODO: check if the sum of weights of previous adds up to more than 100 (nvm)
+        const array = hasHeaders ? markbook.at(-1).children : markbook;
+        array.push({
+          mark: 0,
+          weight,
+          denominator: 100,
+          children: [],
+          row,
+        });
+
+        // bottoms
+        section.find("tbody > tr").each(function () {
+          const row = $(this);
+          const weight = parseFloat(row.find("td:nth-child(3)").text());
+          const mark = parseFloat(row.find("td:nth-child(4) > input").val());
+          const denominator = parseFloat(
+            row.find("td:nth-child(5) > input").val()
+          );
+
+          const array = hasHeaders
+            ? markbook.at(-1).children.at(-1).children
+            : markbook.at(-1).children;
+          array.push({
+            mark,
+            weight,
+            denominator,
+            children: [],
+            row: section,
+          });
+        });
+
+        // console.log(row);
       } else {
         throw new Error("Unknown tagName", tagName);
       }
@@ -190,6 +236,8 @@ const parseMarkbook = () => {
       //   }
       // }
     });
+  console.log(markbook);
+  // console.log(JSON.stringify(markbook, null, 2));
   return markbook;
 };
 
@@ -292,17 +340,17 @@ const makeMarkbookEditable = () => {
   // initialFinalMark = parseFloat(
   //   $("table.media-print-table  > div > div").text().substr(11)
   // ); // Grab everything after 'Term Mark: '
-  initialFinalMark = $(
-    "table.media-print-table > thead tbody > tr:first td:last"
-  )
-    .text()
-    .trim();
-  console.log(initialFinalMark);
+  // initialFinalMark = $(
+  //   "table.media-print-table > thead tbody > tr:first td:last"
+  // )
+  //   .text()
+  //   .trim();
+  // console.log(initialFinalMark);
 
   $(
     "table.media-print-table > tbody table td:nth-child(n+3):nth-child(-n+5):not(:nth-child(3))"
   ).each(function () {
-    let value = $(this).text();
+    let value = $(this).text().trim();
 
     if (!isNaN(parseFloat(value)) && value !== "") {
       value = +parseFloat(value).toFixed(2);
@@ -310,10 +358,11 @@ const makeMarkbookEditable = () => {
 
     let inputHTML = `<input min="0" type="number" value="${value}" />`;
 
+    // TODO: find all these values
     if (isNaN(parseFloat(value)) && value !== "") {
       if (value === "NHI" || value === "INC")
         inputHTML = `<span class="textMark">${value}</span><input min="0" type="number" value="0" style="display: none;" />`;
-      else if (value === "EXC" || value === "ABS" || value === "COL")
+      else if (value === "Excused" || value === "ABS" || value === "COL")
         // EXC and ABS
         inputHTML = `<span class="textMark">${value}</span><input min="0" type="number" value="" style="display: none;" />`;
       else return; // Ignore other values

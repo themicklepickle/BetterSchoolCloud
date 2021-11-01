@@ -109,6 +109,7 @@ const f = () => {
   console.log("clicked!");
   makeMarkbookEditable();
   createInitialMarkbook();
+  calculateMarks();
 
   // fixBgColor();
   // if (settings.liveModification || settings.percentages) {
