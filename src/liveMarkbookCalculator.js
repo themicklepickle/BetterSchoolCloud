@@ -136,11 +136,12 @@ const parseMarkbook = () => {
       if (tagName === "H2") {
         hasHeaders = true;
         const text = section.text();
-        const re = /\(\d+% of overall mark\)/;
+        const re = /\d+% of overall mark\)/;
         const matches = text.match(re);
-        if (matches.length === 0) throw new Error("Wack header", text);
+        if (!matches || matches.length === 0)
+          throw new Error("Wack header", text);
 
-        const weight = parseFloat(matches[0].substring(1).split("%")[0]);
+        const weight = parseFloat(matches[0].split("%")[0]);
 
         markbook.push({
           mark: 0,
