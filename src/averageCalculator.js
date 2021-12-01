@@ -29,6 +29,7 @@ const grabMarkBooks = (markBooks) => {
       const $row = $(row);
       const className = $row.find("td:first > span").text(); // Grab the class name from the first column
       const grade = $row.find("td:nth-child(5) > span").text();
+      // console.log($(row).find("td:nth-child(5)").html());
       let multiplier = $row.find("td:nth-child(4) > input").val(); // Grab the weight from the third column
 
       markBooks.push({

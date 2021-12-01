@@ -169,7 +169,7 @@ const parseMarkbook = () => {
         // bottoms
         section.find("tbody > tr").each(function () {
           const row = $(this);
-          const weight = parseFloat(row.find("td:nth-child(3)").text());
+          const weight = parseFloat(row.find("td:nth-child(3) > input").val());
           const mark = parseFloat(row.find("td:nth-child(4) > input").val());
           const denominator = parseFloat(
             row.find("td:nth-child(5) > input").val()
@@ -349,7 +349,7 @@ const makeMarkbookEditable = () => {
   // console.log(initialFinalMark);
 
   $(
-    "table.media-print-table > tbody table td:nth-child(n+3):nth-child(-n+5):not(:nth-child(3))"
+    "table.media-print-table > tbody table td:nth-child(n+3):nth-child(-n+5)"
   ).each(function () {
     let value = $(this).text().trim();
 
